@@ -1,0 +1,40 @@
+package project;
+
+import java.util.*;
+
+interface ChatMediator {
+    void showMessage(String message, User user);
+}
+
+class ChatRoom implements ChatMediator {
+    public void showMessage(String message, User user) {
+        System.out.println(user.getName() + " says: " + message);
+    }
+}
+
+class User {
+    private String name;
+    private ChatMediator mediator;
+
+    public User(String name, ChatMediator mediator) {
+        this.name = name;
+        this.mediator = mediator;
+    }
+
+    public String getName() { return name; }
+
+    public void sendMessage(String message) {
+        mediator.showMessage(message, this);
+    }
+}
+
+public class c11 {
+    public static void main(String[] args) {
+        ChatMediator mediator = new ChatRoom();
+        User u1 = new User("Alice", mediator);
+        User u2 = new User("Bob", mediator);
+
+        u1.sendMessage("Hi Bob!");
+        u2.sendMessage("Hello Alice!");
+    }
+}
