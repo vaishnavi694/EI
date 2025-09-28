@@ -2,39 +2,176 @@ package project;
 
 import java.util.*;
 
-interface ChatMediator {
-    void showMessage(String message, User user);
+// BEHAVIORAL 
+// Observer
+interface Subscriber { 
+	void update(String news); 
+	}
+class NewsChannel {
+    List<Subscriber> subs = new ArrayList<>();
+    void add(Subscriber s){
+    	subs.add(s);
+    	}
+    void notifyAll(String news){ 
+    	for(Subscriber s: subs) s.update(news);
+    	}
+}
+class NewsUser implements Subscriber {
+    String name; NewsUser(String n){
+    	name=n;
+    	}
+    public void update(String news){ 
+    	System.out.println(name+" got: "+news);
+    	}
 }
 
-class ChatRoom implements ChatMediator {
-    public void showMessage(String message, User user) {
-        System.out.println(user.getName() + " says: " + message);
-    }
+// Strategy
+interface Payment {
+	void pay(int amt);
+	}
+class Card implements Payment {
+	public void pay(int amt){
+		System.out.println("Paid "+amt+" by Card");
+		}
+	}
+class Upi implements Payment { 
+	public void pay(int amt){ 
+		System.out.println("Paid "+amt+" by UPI"); 
+		}
+	}
+class Cart {
+    Payment p; void set(Payment p){
+    	this.p=p;
+    	}
+    void checkout(int amt){
+    	p.pay(amt);
+    	}
 }
 
-class User {
-    private String name;
-    private ChatMediator mediator;
+// CREATIONAL 
+// Factory
+interface Doc { 
+	void open(); 
+	}
+class Pdf implements Doc {
+	public void open(){
+		System.out.println("Opening PDF"); 
+		}
+	}
+class Word implements Doc {
+	public void open(){
+		System.out.println("Opening Word"); 
+		}
+	}
+class DocFactory { 
+	static Doc get(String type){
+		return type.equalsIgnoreCase("pdf")? new Pdf(): new Word(); 
+		}
+	}
 
-    public User(String name, ChatMediator mediator) {
-        this.name = name;
-        this.mediator = mediator;
-    }
-
-    public String getName() { return name; }
-
-    public void sendMessage(String message) {
-        mediator.showMessage(message, this);
-    }
+// Singleton
+class Config {
+    private static Config obj=new Config(); private String theme;
+    private Config(){} 
+    public static Config get(){
+    	return obj; 
+    	}
+    public void setTheme(String t){
+    	theme=t;
+    	}
+    public String getTheme(){
+    	return theme;
+    	}
 }
 
-public class c11 {
+// STRUCTURAL
+// Adapter
+class OldPrinter { 
+	void printFile(String f){ 
+		System.out.println("Old printer: "+f); 
+		}
+	}
+interface NewPrinter {
+	void print(String f); 
+	}
+class PrinterAdapter implements NewPrinter {
+    OldPrinter old=new OldPrinter();
+    public void print(String f){ 
+    	old.printFile(f);
+    	}
+}
+
+// Decorator
+interface Coffee {
+	String getDesc(); 
+	double cost();
+	}
+class SimpleCoffee implements Coffee {
+	public String getDesc(){ 
+		return "Coffee"; 
+		}
+	public double cost(){
+		return 2; 
+		}
+	}
+class Milk implements Coffee {
+    Coffee c;
+    Milk(Coffee c){
+    	this.c=c;
+    	}
+    public String getDesc(){ 
+    	return c.getDesc()+", Milk";
+    	}
+    public double cost(){
+    	return c.cost()+0.5; 
+    	}
+}
+class Sugar implements Coffee {
+    Coffee c;
+    Sugar(Coffee c){
+    	this.c=c;
+    	}
+    public String getDesc(){
+    	return c.getDesc()+", Sugar";
+    	}
+    public double cost(){ 
+    	return c.cost()+0.2; 
+    	}
+}
+
+public class Exercise1 {
     public static void main(String[] args) {
-        ChatMediator mediator = new ChatRoom();
-        User u1 = new User("Alice", mediator);
-        User u2 = new User("Bob", mediator);
+        System.out.println("Observer:");
+        NewsChannel ch=new NewsChannel();
+        ch.add(new NewsUser("Alice")); 
+        ch.add(new NewsUser("Bob"));
+        ch.notifyAll("News Update!");
 
-        u1.sendMessage("Hi Bob!");
-        u2.sendMessage("Hello Alice!");
+        System.out.println("\nStrategy:");
+        Cart cart=new Cart();
+        cart.set(new Card()); 
+        cart.checkout(500);
+        cart.set(new Upi());
+        cart.checkout(300);
+
+        System.out.println("\nFactory:");
+        Doc d1=DocFactory.get("pdf"); 
+        d1.open();
+        Doc d2=DocFactory.get("word");
+        d2.open();
+
+        System.out.println("\nSingleton:");
+        Config c1=Config.get();
+        c1.setTheme("Dark");
+        Config c2=Config.get(); 
+        System.out.println("Theme: "+c2.getTheme());
+
+        System.out.println("\nAdapter:");
+        NewPrinter np=new PrinterAdapter();
+        np.print("assignment.txt");
+
+        System.out.println("\nDecorator:");
+        Coffee coffee=new Sugar(new Milk(new SimpleCoffee()));
+        System.out.println(coffee.getDesc()+" | Cost: $"+coffee.cost());
     }
 }
