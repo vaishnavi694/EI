@@ -1,0 +1,144 @@
+package project;
+
+import java.util.ArrayList;
+import java.util.List;
+
+class MissionLogger {
+    public static void update(String message) {
+        System.out.println("[MISSION UPDATE] " + message);
+    }
+    public static void error(String message) {
+        System.out.println("[MISSION ERROR] " + message);
+    }
+}
+class Satellite {
+    private String orientation;
+    private String solarPanels;
+    private int dataCollected;
+
+    public Satellite() {
+        this.orientation = "North";
+        this.solarPanels = "Inactive";
+        this.dataCollected = 0;
+        MissionLogger.update("Satellite launched successfully into orbit.");
+        MissionLogger.update("Initializing onboard systems...");
+        missionReport();
+    }
+
+    public void rotate(String direction) {
+        if (!(direction.equals("North") || direction.equals("South") ||
+              direction.equals("East") || direction.equals("West"))) {
+            throw new IllegalArgumentException("Invalid rotation command: " + direction);
+        }
+        this.orientation = direction;
+        MissionLogger.update("Satellite rotated to face " + this.orientation + ".");
+    }
+
+    public void activatePanels() {
+        this.solarPanels = "Active";
+        MissionLogger.update("Solar panels deployed and now ACTIVE. Power generation stable.");
+    }
+
+    public void deactivatePanels() {
+        this.solarPanels = "Inactive";
+        MissionLogger.update("Solar panels retracted. Satellite running on backup power.");
+    }
+
+    public void collectData() {
+        if (!this.solarPanels.equals("Active")) {
+            throw new IllegalStateException("Data collection aborted: Solar panels are INACTIVE.");
+        }
+        this.dataCollected += 10;
+        MissionLogger.update("Satellite collected 10 data units. Total stored: " + this.dataCollected + " units.");
+    }
+
+    public void missionReport() {
+        System.out.println("\n=== SATELLITE STATUS REPORT ===");
+        System.out.println("Orientation  : " + this.orientation);
+        System.out.println("Solar Panels : " + this.solarPanels);
+        System.out.println("Data Stored  : " + this.dataCollected + " units");
+        System.out.println("================================\n");
+    }
+
+    public String getOrientation() { return orientation; }
+    public String getSolarPanels() { return solarPanels; }
+    public int getDataCollected() { return dataCollected; }
+}
+
+interface Command {
+    void execute(Satellite satellite);
+    String getName();
+}
+
+class RotateCommand implements Command {
+    private final String direction;
+    public RotateCommand(String direction) { this.direction = direction; }
+    public void execute(Satellite satellite) {
+        try {
+            satellite.rotate(direction);
+        } catch (Exception e) {
+            MissionLogger.error("Rotation failed: " + e.getMessage());
+        }
+    }
+    public String getName() { return "Rotate to " + direction; }
+}
+
+class ActivatePanelsCommand implements Command {
+    public void execute(Satellite satellite) {
+        satellite.activatePanels();
+    }
+    public String getName() { return "Activate Solar Panels"; }
+}
+
+class DeactivatePanelsCommand implements Command {
+    public void execute(Satellite satellite) {
+        satellite.deactivatePanels();
+    }
+     public String getName() { return "Deactivate Solar Panels"; }
+}
+
+class CollectDataCommand implements Command {
+    public void execute(Satellite satellite) {
+        try {
+            satellite.collectData();
+        } catch (Exception e) {
+            MissionLogger.error("Data collection failed: " + e.getMessage());
+        }
+    }
+    public String getName() { return "Collect Data"; }
+}
+
+class CommandExecutor {
+    private final Satellite satellite;
+
+    public CommandExecutor(Satellite satellite) {
+        this.satellite = satellite;
+    }
+
+    public void run(List<Command> commands) {
+        for (Command cmd : commands) {
+            MissionLogger.update("Executing command: " + cmd.getName());
+            cmd.execute(satellite);
+        }
+    }
+}
+
+public class SatelliteCommandSystem {
+    public static void main(String[] args) {
+        Satellite sat = new Satellite();
+        CommandExecutor executor = new CommandExecutor(sat);
+
+        List<Command> commands = new ArrayList<>();
+        commands.add(new RotateCommand("South"));
+        commands.add(new ActivatePanelsCommand());
+        commands.add(new CollectDataCommand());
+        commands.add(new RotateCommand("East"));
+        commands.add(new CollectDataCommand());
+        commands.add(new DeactivatePanelsCommand());
+
+        executor.run(commands);
+
+        sat.missionReport();
+        MissionLogger.update("Mission sequence completed successfully. Satellite is in stable orbit.");
+    }
+}
